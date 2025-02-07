@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lingala Master - Learn 50 Words Daily</title>
+    <style>
+        :root {
+            --primary: #2A9D8F;
+            --secondary: #E76F51;
+            --background: #264653;
+        }
+
+        body {
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: var(--background);
+            color: white;
+        }
+
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: var(--primary);
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+
+        .word-card {
+            background: white;
+            color: var(--background);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .word-image {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 15px;
+            border-radius: 10px;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .option-btn {
+            background: var(--primary);
+            color: white;
+        }
+
+        .option-btn:hover {
+            background: #228176;
+        }
+
+        .correct { background: #2A9D8F !important; }
+        .wrong { background: #E76F51 !important; }
+
+        .progress-bar {
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--secondary);
+            transition: width 0.3s ease;
+        }
+
+        .life-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .life {
+            color: #E76F51;
+            font-size: 24px;
+        }
+
+        /* New Word Bank Section */
+        .word-bank {
+            background: #fff;
+            color: var(--background);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 40px;
+        }
+
+        .word-bank h2 {
+            text-align: center;
+        }
+
+        .word-bank-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .word-bank-item img {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            margin-right: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>Lingala Master 🌍</h1>
+            <p>Learn 50 New Words Daily!</p>
+            <button onclick="toggleWordBank()">Show/Hide Word Bank</button>
+        </div>
+
+        <div class="stats">
+            <div>Score: <span id="score">0</span></div>
+            <div class="life-container">
+                Lives: 
+                <div id="lives">❤️❤️❤️</div>
+            </div>
+            <div>Progress: <span id="progress">0</span>/50</div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress" id="progress-bar"></div>
+        </div>
+
+        <div class="word-card">
+            <!-- Display the associated image -->
+            <img id="word-image" class="word-image" src="" alt="Word Image">
+            <h2 id="current-word">Mbote</h2>
+            <button onclick="playAudio()" style="margin: 15px 0;">🔊 Play Sound</button>
+            <div class="options" id="options-container"></div>
+        </div>
+
+        <!-- Word Bank Section -->
+        <div id="word-bank-section" class="word-bank" style="display: none;">
+            <h2>Word Bank</h2>
+            <div id="word-bank-items"></div>
+        </div>
+    </div>
+
+    <script>
+        // Complete Lingala Word Bank (50 words). Replace URLs as needed.
+        const wordBank = [
+            {
+                lingala: "Mbote",
+                translation: "Hello",
+                pronunciation: "m-boh-tay",
+                category: "Greetings",
+                image: "https://via.placeholder.com/150?text=Mbote"
+            },
+            {
+                lingala: "Malámu",
+                translation: "Good",
+                pronunciation: "mah-lah-moo",
+                category: "Adjectives",
+                image: "https://via.placeholder.com/150?text=Malámu"
+            },
+            {
+                lingala: "Na lingí yo",
+                translation: "I love you",
+                pronunciation: "nah leen-gee yoh",
+                category: "Phrases",
+                image: "https://via.placeholder.com/150?text=Na+lingí+yo"
+            },
+            {
+                lingala: "Sukali",
+                translation: "Sugar",
+                pronunciation: "soo-kah-lee",
+                category: "Food",
+                image: "https://via.placeholder.com/150?text=Sukali"
+            },
+            {
+                lingala: "Moto",
+                translation: "Person",
+                pronunciation: "moh-toh",
+                category: "Nouns",
+                image: "https://via.placeholder.com/150?text=Moto"
+            }
+        ];
+
+        let currentWordIndex = 0;
+        let score = 0;
+        let lives = 3;
+        let progress = 0;
+
+        function initializeGame() {
+            showNextWord();
+            updateDisplay();
+            populateWordBank();
+        }
+
+        function showNextWord() {
+            const currentWord = wordBank[currentWordIndex];
+            document.getElementById('current-word').textContent = currentWord.lingala;
+            // Set the associated image for the current word
+            document.getElementById('word-image').src = currentWord.image;
+            document.getElementById('word-image').alt = currentWord.lingala;
+            
+            // Generate options
+            const options = [currentWord.translation];
+            while (options.length < 4) {
+                const randomWord = wordBank[Math.floor(Math.random() * wordBank.length)].translation;
+                if (!options.includes(randomWord)) options.push(randomWord);
+            }
+            
+            // Shuffle options
+            options.sort(() => Math.random() - 0.5);
+            
+            // Display options
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = options.map(option => `
+                <button class="option-btn" onclick="checkAnswer('${option}')">${option}</button>
+            `).join('');
+        }
+
+        function checkAnswer(selected) {
+            const correctAnswer = wordBank[currentWordIndex].translation;
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            buttons.forEach(button => {
+                if (button.textContent === correctAnswer) button.classList.add('correct');
+                if (button.textContent === selected && selected !== correctAnswer) {
+                    button.classList.add('wrong');
+                    lives--;
+                }
+            });
+
+            if (selected === correctAnswer) {
+                score += 100;
+                progress++;
+                currentWordIndex = (currentWordIndex + 1) % wordBank.length;
+                setTimeout(() => {
+                    showNextWord();
+                    updateDisplay();
+                }, 1500);
+            } else {
+                setTimeout(() => {
+                    if (lives > 0) {
+                        showNextWord();
+                        updateDisplay();
+                    } else {
+                        alert(`Game Over! Final Score: ${score}`);
+                        resetGame();
+                    }
+                }, 1500);
+            }
+
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').innerHTML = '❤️'.repeat(lives);
+            document.getElementById('progress').textContent = progress;
+            document.getElementById('progress-bar').style.width = `${(progress/50)*100}%`;
+        }
+
+        function resetGame() {
+            score = 0;
+            lives = 3;
+            progress = 0;
+            currentWordIndex = 0;
+            initializeGame();
+        }
+
+        function playAudio() {
+            // Add actual audio files later
+            const audio = new Audio(`audio/${wordBank[currentWordIndex].lingala}.mp3`);
+            audio.play().catch(() => alert("Audio files not found - add them later!"));
+        }
+
+        function populateWordBank() {
+            const container = document.getElementById('word-bank-items');
+            container.innerHTML = wordBank.map(word => `
+                <div class="word-bank-item">
+                    <img src="${word.image}" alt="${word.lingala}">
+                    <div>
+                        <strong>${word.lingala}</strong><br>
+                        ${word.translation}<br>
+                        <small>${word.pronunciation}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleWordBank() {
+            const section = document.getElementById('word-bank-section');
+            // Use getComputedStyle for accurate display checking
+            if (window.getComputedStyle(section).display === "none") {
+                section.style.display = "block";
+            } else {
+                section.style.display = "none";
+            }
+        }
+
+        // Start game
+        initializeGame();
+    </script>
+</body>
+</html>
